@@ -1,0 +1,1 @@
+# dotnet7nhibernate-startertemplate
