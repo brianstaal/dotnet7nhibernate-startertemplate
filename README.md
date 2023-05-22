@@ -12,5 +12,5 @@ I made up a db to hold your Recipes - just to have some tables as an example. Th
 Within the next few weeks I will implement Serilog, JWT - and maybe some other stuff that will come to my head.
 The important thing is at the implementations is implementet as-good-as-it-gets and no non-useful stuff. Stripped for EF and other thinks that I do not like.
 
-# Project by Brian Staal
+# Project by Brian Staal @ www.wisesoft.dk
 I made this for my self - but you can use it as well. It's ok to comment if there are better solutions.
