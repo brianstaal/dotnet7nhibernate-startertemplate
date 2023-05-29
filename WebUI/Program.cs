@@ -9,13 +9,15 @@ using NHibernate.Dialect;
 using NHibernate.Mapping.ByCode;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.SetBasePath(Directory.GetCurrentDirectory());
 
 // Secure the MsSql Username & Password from git (dotnet user-secrets init)
-var connStrBuilder = new SqlConnectionStringBuilder(builder.Configuration.GetConnectionString("MsSqlConnection"))
+var connStrBuilder = new SqlConnectionStringBuilder(builder.Configuration.GetConnectionString("MsSqlConnection"));
+if (!string.IsNullOrEmpty(builder.Configuration["SQLUSERNAME"]) && !string.IsNullOrEmpty(builder.Configuration["SQLUSERNAME"]))
 {
-    UserID = builder.Configuration["SQLUSERNAME"],
-    Password = builder.Configuration["SQLUSERPASSWORD"]
-};
+    connStrBuilder.UserID = builder.Configuration["SQLUSERNAME"];
+    connStrBuilder.Password = builder.Configuration["SQLUSERPASSWORD"];
+}
 var connectionString = connStrBuilder.ConnectionString;
 
 // Setup Nhibernate
@@ -59,11 +61,9 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-else
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
