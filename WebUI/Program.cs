@@ -1,4 +1,4 @@
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Domain.Persistence;
@@ -13,7 +13,7 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory());
 
 // Secure the MsSql Username & Password from git (dotnet user-secrets init)
 var connStrBuilder = new SqlConnectionStringBuilder(builder.Configuration.GetConnectionString("MsSqlConnection"));
-if (!string.IsNullOrEmpty(builder.Configuration["SQLUSERNAME"]) && !string.IsNullOrEmpty(builder.Configuration["SQLUSERNAME"]))
+if (!string.IsNullOrEmpty(builder.Configuration["SQLUSERNAME"]) && !string.IsNullOrEmpty(builder.Configuration["SQLUSERPASSWORD"]))
 {
     connStrBuilder.UserID = builder.Configuration["SQLUSERNAME"];
     connStrBuilder.Password = builder.Configuration["SQLUSERPASSWORD"];
