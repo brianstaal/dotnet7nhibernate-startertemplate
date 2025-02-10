@@ -1,48 +1,12 @@
-using Microsoft.Data.SqlClient;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using Domain.Persistence;
-using Domain.Persistence.Abstract;
-using Domain.Persistence.NhConcrete;
-using NHibernate.Cfg;
-using NHibernate.Dialect;
-using NHibernate.Mapping.ByCode;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory());
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+builder.Configuration.AddUserSecrets<Program>();
 
-// Secure the MsSql Username & Password from git (dotnet user-secrets init)
-var connStrBuilder = new SqlConnectionStringBuilder(builder.Configuration.GetConnectionString("MsSqlConnection"));
-if (!string.IsNullOrEmpty(builder.Configuration["SQLUSERNAME"]) && !string.IsNullOrEmpty(builder.Configuration["SQLUSERPASSWORD"]))
-{
-    connStrBuilder.UserID = builder.Configuration["SQLUSERNAME"];
-    connStrBuilder.Password = builder.Configuration["SQLUSERPASSWORD"];
-}
-var connectionString = connStrBuilder.ConnectionString;
-
-// Setup Nhibernate
-var nhMapper = new ModelMapper();
-nhMapper.AddMappings(Assembly.GetAssembly(typeof(NhMapping))?.GetExportedTypes());
-var nhMapping = nhMapper.CompileMappingForAllExplicitlyAddedEntities();
-
-var nhConfig = new Configuration();
-nhConfig.DataBaseIntegration(dbi =>
-{
-    dbi.Dialect<MsSql2012Dialect>();
-    dbi.ConnectionString = connectionString;
-    dbi.KeywordsAutoImport = Hbm2DDLKeyWords.AutoQuote;
-    dbi.SchemaAction = SchemaAutoAction.Validate;
-    dbi.LogFormattedSql = true;
-    dbi.LogSqlInConsole = true;
-});
-nhConfig.AddMapping(nhMapping);
-
-var sessionFactory = nhConfig.BuildSessionFactory();
-builder.Services.AddSingleton(sessionFactory);
-builder.Services.AddScoped(factory => sessionFactory.OpenSession());
-
-// Repository Mappings
-builder.Services.AddScoped<IRecipeRepository, NhRecipeRepository>();
+builder.Services.AddNHibernate(builder.Configuration.GetConnectionString("MsSqlConnection"));
 
 // General Webapp setup
 builder.Services.AddControllers();
