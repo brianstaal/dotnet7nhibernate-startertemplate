@@ -6,7 +6,7 @@ I made up a db to hold your Recipes - just to have some tables as an example. Th
 
 1.	Create a database on your local MS SQL-server called RecipeDb
 2.	Run the SQL script from the DbCreation folder
-3.	Set the username & password by calling dotnet user-secrets init / dotnet user-secrets set "SQLUSERNAME" "your-user-name"
+3.	Set the username & password by calling dotnet user-secrets init / dotnet user-secrets set "SQLUSERNAME" "your-username" / dotnet user-secrets set "SQLUSERPASSWORD" "your-password"
 
 # ToDo's
 Within the next few weeks I will implement Serilog, JWT - and maybe some other stuff that will come to my head.
