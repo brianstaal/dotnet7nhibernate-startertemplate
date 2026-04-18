@@ -1,5 +1,6 @@
 using Domain.Persistence.Abstract;
 using Microsoft.AspNetCore.Mvc;
+using WebUI.Models;
 
 namespace WebUI.Controllers
 {
@@ -25,7 +26,29 @@ namespace WebUI.Controllers
                 return await Task.FromResult(NoContent());
             }
 
-            return Ok(recipes.ToList());
+            var response = recipes.Select(recipe => new RecipeResponse
+            {
+                Id = recipe.Id,
+                Name = recipe.Name,
+                CategoryId = recipe.CategoryId,
+                CategoryName = recipe.Category?.Name ?? string.Empty,
+                Description = recipe.Description ?? string.Empty,
+                Votes = recipe.Votes,
+                DateCreate = recipe.DateCreate,
+                DateChange = recipe.DateChange,
+                Ingredients = (recipe.RecipeIngredients ?? Array.Empty<Domain.Entities.RecipeIngredient>())
+                    .Select(ingredient => new RecipeIngredientResponse
+                    {
+                        IngredientId = ingredient.IngredientId,
+                        IngredientName = ingredient.Ingredient?.Name ?? string.Empty,
+                        AmountTypeId = ingredient.AmountTypeId,
+                        AmountTypeName = ingredient.AmountType?.Name ?? string.Empty,
+                        Amount = ingredient.Amount
+                    })
+                    .ToList()
+            }).ToList();
+
+            return Ok(response);
         }
     }
 }

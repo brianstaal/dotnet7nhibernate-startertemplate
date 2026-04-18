@@ -126,6 +126,13 @@ namespace Domain.Persistence
                     r.Update(false);
                     r.Insert(false);
                 });
+
+                ManyToOne(r => r.AmountType, r =>
+                {
+                    r.Column("AmountTypeId");
+                    r.Update(false);
+                    r.Insert(false);
+                });
             }
         }
 
