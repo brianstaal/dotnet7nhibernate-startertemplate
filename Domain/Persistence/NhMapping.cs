@@ -38,6 +38,7 @@ namespace Domain.Persistence
                 Property(x => x.CategoryId, map => map.NotNullable(false));
                 Property(x => x.Name, map => map.Length(50));
                 Property(x => x.Description, map => map.Length(4001)); // nvarchar(max)
+                Property(x => x.Votes);
                 Property(x => x.DateCreate, map => map.Generated(PropertyGeneration.Insert));
                 Property(x => x.DateChange, map => map.NotNullable(false));
 

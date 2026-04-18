@@ -8,8 +8,8 @@ namespace Domain.Persistence.NhConcrete
     public abstract class NhRepository : IDisposable
     {
         private readonly ISessionFactory _sessionFactory;
-        private ISession _session;
-        private ITransaction _transaction;
+        private ISession? _session;
+        private ITransaction? _transaction;
         private bool _disposed;
 
         protected NhRepository(ISessionFactory sessionFactory)

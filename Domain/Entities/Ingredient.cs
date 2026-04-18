@@ -7,13 +7,13 @@ namespace Domain.Entities
     {
         public virtual int Id { get; set; }
 
-        public virtual string Name { get; set; }
+        public virtual string Name { get; set; } = string.Empty;
 
         public virtual DateTime DateCreate { get; set; }
 
         public virtual DateTime? DateChange { get; set; }
 
-        public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; }
+        public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 
         #region Methods
         public override bool Equals(object obj)

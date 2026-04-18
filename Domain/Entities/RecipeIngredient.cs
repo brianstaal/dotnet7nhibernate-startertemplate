@@ -16,11 +16,11 @@ namespace Domain.Entities
 
         public virtual DateTime? DateChange { get; set; }
 
-        public virtual Recipe Recipe { get; set; }
+        public virtual Recipe Recipe { get; set; } = null!;
         
-        public virtual Ingredient Ingredient { get; set; }
+        public virtual Ingredient Ingredient { get; set; } = null!;
         
-        public virtual AmountType AmountType { get; set; }
+        public virtual AmountType AmountType { get; set; } = null!;
 
         #region Methods
         public override bool Equals(object obj)

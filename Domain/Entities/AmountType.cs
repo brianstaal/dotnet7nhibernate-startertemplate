@@ -6,7 +6,7 @@ namespace Domain.Entities
     {
         public virtual int Id { get; set; }
 
-        public virtual string Name { get; set; }
+        public virtual string Name { get; set; } = string.Empty;
 
         public virtual DateTime DateCreate { get; set; }
 
