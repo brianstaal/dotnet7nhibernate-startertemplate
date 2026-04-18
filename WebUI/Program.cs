@@ -6,7 +6,17 @@ builder.Configuration.SetBasePath(Directory.GetCurrentDirectory());
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddUserSecrets<Program>();
 
-builder.Services.AddNHibernate(builder.Configuration.GetConnectionString("MsSqlConnection"));
+var sqlConnectionStringTemplate = builder.Configuration.GetConnectionString("MsSqlConnection")
+    ?? throw new InvalidOperationException("Connection string 'MsSqlConnection' is missing.");
+var sqlUsername = builder.Configuration["SQLUSERNAME"]
+    ?? throw new InvalidOperationException("User secret 'SQLUSERNAME' is missing.");
+var sqlUserPassword = builder.Configuration["SQLUSERPASSWORD"]
+    ?? throw new InvalidOperationException("User secret 'SQLUSERPASSWORD' is missing.");
+var sqlConnectionString = sqlConnectionStringTemplate
+    .Replace("SQLUSERNAME", sqlUsername)
+    .Replace("SQLUSERPASSWORD", sqlUserPassword);
+
+builder.Services.AddNHibernate(sqlConnectionString);
 
 // General Webapp setup
 builder.Services.AddControllers();
