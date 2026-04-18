@@ -1,16 +1,20 @@
-# Introduction 
-The purpose of this project is to get started with Nhibernate REALLY fast!
-I made up a db to hold your Recipes - just to have some tables as an example. The content in the tables are in Danish - sorry, but I was lazy. :)
+# Introduction
+The purpose of this project is to get started with NHibernate quickly.
+It includes a small recipe database and a minimal ASP.NET Core UI so a new project can start from a working baseline.
 
 # Getting Started
 
-1.	Create a database on your local MS SQL-server called RecipeDb
-2.	Run the SQL script from the DbCreation folder
-3.	Set the username & password by calling dotnet user-secrets init / dotnet user-secrets set "SQLUSERNAME" "your-username" / dotnet user-secrets set "SQLUSERPASSWORD" "your-password"
+1. Create a database on your local SQL Server called `RecipeDb`.
+2. Run the SQL script from `DbCreation/RecipeDb.sql`.
+3. Initialize local secrets for the `WebUI` project:
+   `dotnet user-secrets set "SQLUSERNAME" "your-username" --project WebUI/WebUI.csproj`
+   `dotnet user-secrets set "SQLUSERPASSWORD" "your-password" --project WebUI/WebUI.csproj`
+4. Run the test suite:
+   `dotnet test DotnetFullWebApp.sln`
+5. Start the application:
+   `dotnet run --project WebUI/WebUI.csproj`
 
-# ToDo's
-Within the next few weeks I will implement Serilog, JWT - and maybe some other stuff that will come to my head.
-The important thing is at the implementations is implementet as-good-as-it-gets and no non-useful stuff. Stripped for EF and other thinks that I do not like.
+# Notes
+The NHibernate session factory is registered once, and repositories manage their own session lifecycle lazily. This keeps the template closer to production-ready usage and avoids binding a scoped `ISession` for every request by default.
 
 # Project by Brian Staal @ www.wisesoft.dk
-I made this for my self - but you can use it as well. It's ok to comment if there are better solutions.

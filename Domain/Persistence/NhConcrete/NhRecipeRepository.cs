@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Domain.Entities;
@@ -9,22 +9,21 @@ namespace Domain.Persistence.NhConcrete
 {
     public class NhRecipeRepository : NhRepository, IRecipeRepository
     {
-        public NhRecipeRepository(ISession session, ISessionFactory sessionFactory) : base(session, sessionFactory)
+        public NhRecipeRepository(ISessionFactory sessionFactory) : base(sessionFactory)
         {
         }
 
-        public async Task<ICollection<Recipe>> GetRecipies()
+        public async Task<IReadOnlyCollection<Recipe>> GetRecipesAsync()
         {
-            Recipe r = null;
+            return await ReadAsync(async session =>
+            {
+                var result = await session.QueryOver<Recipe>()
+                    .ListAsync<Recipe>();
 
-            var query = Session.QueryOver(() => r);
-
-            var result = await query
-                .ListAsync<Recipe>();
-
-            return result
-                .Distinct()
-                .ToList();
+                return (IReadOnlyCollection<Recipe>)result
+                    .Distinct()
+                    .ToList();
+            });
         }
     }
 }

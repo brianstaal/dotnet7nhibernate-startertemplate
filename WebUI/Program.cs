@@ -1,10 +1,9 @@
 using System.Text.Json.Serialization;
 using Domain.Persistence;
+using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.SetBasePath(Directory.GetCurrentDirectory());
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-builder.Configuration.AddUserSecrets<Program>();
+builder.Configuration.AddUserSecrets<Program>(optional: true);
 
 var sqlConnectionStringTemplate = builder.Configuration.GetConnectionString("MsSqlConnection")
     ?? throw new InvalidOperationException("Connection string 'MsSqlConnection' is missing.");
@@ -12,27 +11,24 @@ var sqlUsername = builder.Configuration["SQLUSERNAME"]
     ?? throw new InvalidOperationException("User secret 'SQLUSERNAME' is missing.");
 var sqlUserPassword = builder.Configuration["SQLUSERPASSWORD"]
     ?? throw new InvalidOperationException("User secret 'SQLUSERPASSWORD' is missing.");
-var sqlConnectionString = sqlConnectionStringTemplate
-    .Replace("SQLUSERNAME", sqlUsername)
-    .Replace("SQLUSERPASSWORD", sqlUserPassword);
+var sqlConnectionStringBuilder = new SqlConnectionStringBuilder(sqlConnectionStringTemplate)
+{
+    UserID = sqlUsername,
+    Password = sqlUserPassword
+};
 
-builder.Services.AddNHibernate(sqlConnectionString);
+builder.Services.AddNHibernate(sqlConnectionStringBuilder.ConnectionString, builder.Environment.IsDevelopment());
 
-// General Webapp setup
 builder.Services.AddControllers();
 builder.Services.AddMvc().AddJsonOptions(jo => jo.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -41,10 +37,6 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-// Not Yet Implemented
-//app.UseAuthentication();
-//app.UseAuthorization();
 
 app.MapControllers();
 

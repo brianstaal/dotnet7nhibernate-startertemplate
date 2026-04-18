@@ -1,120 +1,159 @@
-﻿using Domain.Persistence.Abstract;
-using NHibernate;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NHibernate;
 
 namespace Domain.Persistence.NhConcrete
 {
-    public class NhRepository : IRepository
+    public abstract class NhRepository : IDisposable
     {
-        protected readonly ISession Session;
-        protected readonly ISessionFactory SessionFactory;
-        protected ITransaction Transaction;
+        private readonly ISessionFactory _sessionFactory;
+        private ISession _session;
+        private ITransaction _transaction;
+        private bool _disposed;
 
-        public NhRepository(ISession session, ISessionFactory sessionFactory)
+        protected NhRepository(ISessionFactory sessionFactory)
         {
-            Session = session;
-            SessionFactory = sessionFactory;
+            _sessionFactory = sessionFactory ?? throw new ArgumentNullException(nameof(sessionFactory));
         }
 
-        public void BeginTransaction()
+        protected ISession Session => _session ??= _sessionFactory.OpenSession();
+
+        protected async Task<T> ReadAsync<T>(Func<ISession, Task<T>> action)
         {
-            Transaction = Session.BeginTransaction();
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (_session != null)
+                return await action(_session);
+
+            using var session = _sessionFactory.OpenSession();
+            return await action(session);
         }
 
-        public void Commit()
+        protected Task BeginTransactionAsync()
         {
+            if (_transaction?.IsActive == true)
+                return Task.CompletedTask;
+
+            _transaction = Session.BeginTransaction();
+            return Task.CompletedTask;
+        }
+
+        protected async Task CommitAsync()
+        {
+            if (_transaction is null)
+                throw new InvalidOperationException("No active transaction.");
+
             try
             {
-                Session.GetCurrentTransaction().Commit();
-                Session.Flush();
+                await _transaction.CommitAsync();
             }
-            catch (Exception)
+            catch
             {
-                Session.GetCurrentTransaction().Rollback();
+                if (_transaction.IsActive)
+                    await _transaction.RollbackAsync();
+
+                throw;
+            }
+            finally
+            {
+                _transaction.Dispose();
+                _transaction = null;
+                _session?.Dispose();
+                _session = null;
+            }
+        }
+
+        protected async Task RollbackAsync()
+        {
+            if (_transaction is null)
+                return;
+
+            try
+            {
+                if (_transaction.IsActive)
+                    await _transaction.RollbackAsync();
+            }
+            finally
+            {
+                _transaction.Dispose();
+                _transaction = null;
+                _session?.Dispose();
+                _session = null;
+            }
+        }
+
+        protected Task ClearSessionAsync()
+        {
+            _session?.Clear();
+            return Task.CompletedTask;
+        }
+
+        protected async Task<T> SaveOrUpdateAsync<T>(T entity) where T : class
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            if (_transaction?.IsActive != true)
+                await BeginTransactionAsync();
+
+            try
+            {
+                await Session.SaveOrUpdateAsync(entity);
+                return entity;
+            }
+            catch
+            {
+                await RollbackAsync();
                 throw;
             }
         }
 
-        public void ResetSession()
+        protected async Task BulkInsertAsync<T>(IEnumerable<T> entities) where T : class
         {
-            Session.Clear();
-        }
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
 
-        public void Rollback()
-        {
-            Transaction.Rollback();
-        }
-
-        public void CloseTransaction()
-        {
-            if (Transaction != null)
-            {
-                Transaction.Dispose();
-                Transaction = null;
-            }
-        }
-
-        #region Helper Methods
-        protected void SaveItem(object toSave)
-        {
-            try
-            {
-                Session.BeginTransaction();
-                Session.Save(toSave);
-            }
-            catch (Exception)
-            {
-                Session.GetCurrentTransaction().Rollback();
-                throw;
-            }
-        }
-
-        protected async Task SaveItemsAsync(ICollection<object> objectItems)
-        {
-            using var statelessSession = SessionFactory.OpenStatelessSession();
+            using var statelessSession = _sessionFactory.OpenStatelessSession();
             using var transaction = statelessSession.BeginTransaction();
 
-            foreach (var o in objectItems)
-            {
-                await statelessSession.InsertAsync(o);
-            }
+            foreach (var entity in entities)
+                await statelessSession.InsertAsync(entity);
 
             await transaction.CommitAsync();
-            transaction.Dispose();
-            statelessSession.Dispose();
-
         }
 
-        protected void UpdateItem(object toUpdate)
+        protected async Task DeleteAsync<T>(T entity) where T : class
         {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            if (_transaction?.IsActive != true)
+                await BeginTransactionAsync();
+
             try
             {
-                Session.BeginTransaction();
-                Session.Update(toUpdate);
+                await Session.DeleteAsync(entity);
             }
-            catch (Exception)
+            catch
             {
-                Session.GetCurrentTransaction().Rollback();
+                await RollbackAsync();
                 throw;
             }
         }
 
-        protected void DeleteItem(object toDelete)
+        public void Dispose()
         {
-            try
-            {
-                Session.BeginTransaction();
-                Session.Delete(toDelete);
-            }
-            catch (Exception)
-            {
-                Session.GetCurrentTransaction().Rollback();
-                throw;
-            }
-        }
+            if (_disposed)
+                return;
 
-        #endregion
+            _transaction?.Dispose();
+            _session?.Dispose();
+            _transaction = null;
+            _session = null;
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
     }
 }

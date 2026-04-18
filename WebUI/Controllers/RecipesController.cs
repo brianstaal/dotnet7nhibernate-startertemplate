@@ -1,4 +1,4 @@
-﻿using Domain.Persistence.Abstract;
+using Domain.Persistence.Abstract;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebUI.Controllers
@@ -9,7 +9,7 @@ namespace WebUI.Controllers
     {
         private readonly ILogger<RecipesController> _logger;
         private readonly IRecipeRepository _recipeRepository;
-        
+
         public RecipesController(ILogger<RecipesController> logger, IRecipeRepository recipeRepository)
         {
             _logger = logger;
@@ -19,15 +19,13 @@ namespace WebUI.Controllers
         [HttpGet(Name = "GetRecipes")]
         public async Task<IActionResult> Get()
         {
-            var recipes = await _recipeRepository.GetRecipies();
+            var recipes = await _recipeRepository.GetRecipesAsync();
             if (!recipes.Any())
             {
                 return await Task.FromResult(NoContent());
             }
+
             return Ok(recipes.ToList());
         }
-
-
-
     }
 }

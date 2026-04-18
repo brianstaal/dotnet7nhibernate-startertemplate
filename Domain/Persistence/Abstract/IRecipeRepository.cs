@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Domain.Entities;
 
 namespace Domain.Persistence.Abstract
 {
-    public interface IRecipeRepository : IRepository
+    public interface IRecipeRepository
     {
-        Task<ICollection<Recipe>> GetRecipies();
+        Task<IReadOnlyCollection<Recipe>> GetRecipesAsync();
     }
 }
